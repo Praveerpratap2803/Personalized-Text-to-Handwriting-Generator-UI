@@ -21,7 +21,7 @@ export default function PatientCard({ patient, API_BASE, fetchPatients }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-lg border-t-4 border-blue-400 hover:scale-105 transition-transform duration-300">
+    <div className="bg-white p-6 rounded-3xl shadow-lg border-t-4 border-blue-400">
       {editing ? (
         <div className="space-y-3">
           <input
