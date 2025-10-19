@@ -22,24 +22,28 @@ function Loader({ size = "md", text }) {
 
 export default function App() {
   const [patients, setPatients] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
   const [error, setError] = useState(null);
+  const [loadingMessage, setLoadingMessage] = useState(
+    "Loading patients — please wait…"
+  );
 
-  const API_BASE = "https://personalized-text-to-handwriting.onrender.com"; // Replace with your backend URL
+  const API_BASE = "https://personalized-text-to-handwriting.onrender.com";
 
   // fetchPatients accepts an optional AbortSignal so callers can cancel.
   const fetchPatients = async (signal) => {
     setIsLoading(true);
     setError(null);
+    setLoadingMessage("Loading patients — please wait…");
 
     try {
       const res = await fetch(`${API_BASE}/view`, { signal });
-
       if (!res.ok) {
-        const text = await res.text().catch(() => res.statusText || `Status ${res.status}`);
+        const text = await res
+          .text()
+          .catch(() => res.statusText || `Status ${res.status}`);
         throw new Error(text || `Request failed with status ${res.status}`);
       }
-
       const data = await res.json();
       setPatients(Array.isArray(data) ? data : []);
       return data;
@@ -50,27 +54,25 @@ export default function App() {
       }
       console.error("Error fetching patients:", err);
       setError(err?.message || "Failed to fetch patients");
+      setPatients([]); // Clear patients on error
     } finally {
       setIsLoading(false);
     }
   };
 
-  // New: call backend to delete all patients
+  // Call backend to delete all patients
   const handleDeleteAll = async () => {
-    // if (!window.confirm("Delete ALL patients? This action cannot be undone.")) return;
-
     setIsLoading(true);
     setError(null);
-
     try {
       const res = await fetch(`${API_BASE}/deleteAll`, { method: "DELETE" });
       if (!res.ok) {
-        const text = await res.text().catch(() => res.statusText || `Status ${res.status}`);
+        const text = await res
+          .text()
+          .catch(() => res.statusText || `Status ${res.status}`);
         throw new Error(text || `Delete all failed (${res.status})`);
       }
-      // Refresh list after successful deletion
       await fetchPatients();
-      // alert("✅ All patients deleted.");
     } catch (err) {
       console.error("Error deleting all patients:", err);
       setError(err?.message || "Failed to delete all patients");
@@ -81,12 +83,18 @@ export default function App() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchPatients(controller.signal);
+    const timer = setTimeout(() => {
+      setLoadingMessage("Server is starting up, this may take a moment...");
+    }, 3000);
+
+    fetchPatients(controller.signal).finally(() => {
+      clearTimeout(timer);
+    });
 
     return () => {
       controller.abort();
+      clearTimeout(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -106,8 +114,6 @@ export default function App() {
           <div className="flex-1">
             <AddPatientForm API_BASE={API_BASE} fetchPatients={fetchPatients} />
           </div>
-
-          {/* Delete All button placed beside the form */}
           <div className="ml-4 flex-shrink-0 self-start">
             <button
               onClick={handleDeleteAll}
@@ -122,10 +128,10 @@ export default function App() {
       </div>
 
       <div className="max-w-5xl mx-auto mt-12">
-        {/* Initial load: show a centered card with loader until all patients fetched */}
+        {/* The main loader for the initial data fetch */}
         {isLoading && patients.length === 0 ? (
           <div className="flex items-center justify-center min-h-[220px] bg-white rounded-2xl shadow-inner">
-            <Loader size="lg" text="Loading patients — please wait…" />
+            <Loader size="lg" text={loadingMessage} />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -133,12 +139,13 @@ export default function App() {
               patients={patients}
               API_BASE={API_BASE}
               fetchPatients={fetchPatients}
+              isLoading={isLoading} // <-- ADD THIS PROP
             />
           </div>
         )}
       </div>
 
-      {/* If there is a background refresh after initial load, show a subtle overlay loader */}
+      {/* Background refresh loader (no changes here) */}
       {isLoading && patients.length > 0 && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-white/60 z-50"
