@@ -5,7 +5,7 @@ export default function PatientCard({ patient, API_BASE, fetchPatients }) {
   const [edited, setEdited] = useState({ ...patient });
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete ${patient.name}?`)) return;
+    // if (!window.confirm(`Delete ${patient.name}?`)) return;
     await fetch(`${API_BASE}/delete/${patient.name}`, { method: "DELETE" });
     fetchPatients();
   };

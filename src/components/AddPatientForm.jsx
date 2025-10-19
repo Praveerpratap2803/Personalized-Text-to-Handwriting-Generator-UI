@@ -21,7 +21,7 @@ export default function AddPatientForm({ API_BASE, fetchPatients }) {
     setLoading(false);
 
     if (res.ok) {
-      alert("✅ Patient added successfully!");
+      // alert("✅ Patient added successfully!");
       setName("");
       setAge("");
       setDisease("");

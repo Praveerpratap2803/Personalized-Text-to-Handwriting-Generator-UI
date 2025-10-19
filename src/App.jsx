@@ -57,7 +57,7 @@ export default function App() {
 
   // New: call backend to delete all patients
   const handleDeleteAll = async () => {
-    if (!window.confirm("Delete ALL patients? This action cannot be undone.")) return;
+    // if (!window.confirm("Delete ALL patients? This action cannot be undone.")) return;
 
     setIsLoading(true);
     setError(null);
@@ -70,7 +70,7 @@ export default function App() {
       }
       // Refresh list after successful deletion
       await fetchPatients();
-      alert("✅ All patients deleted.");
+      // alert("✅ All patients deleted.");
     } catch (err) {
       console.error("Error deleting all patients:", err);
       setError(err?.message || "Failed to delete all patients");
